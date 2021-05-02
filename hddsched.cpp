@@ -77,6 +77,9 @@ int main(int argc, char* argv[]){
                         throw 3;
                     }
                     addresses.push_back(std::stoi(temp));
+                    if(addresses[addresses.size()-1] < 0 || addresses[addresses.size()-1] > SIZE-1){
+                        throw 5;
+                    }
                 }
                 addrSize = addresses.size();
                 inFile.close();
@@ -118,6 +121,10 @@ int main(int argc, char* argv[]){
             case 4:
                 std::cout << "invalid starting position!" << std::endl;
                 std::cout << "Valid range is " << RANGE << std::endl;
+                break;
+            case 5:
+                std::cout << "invalid address request!" << std::endl;
+                std::cout << "Valid Range is " << RANGE << std::endl;
                 break;
         }
         std::cout << "Exiting." << std::endl;

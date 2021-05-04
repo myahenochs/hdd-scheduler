@@ -36,9 +36,13 @@ FLAGS:
 * s: SCAN
 * c: CSCAN
 
+-l: Start disk spinning left.
+
+-r: Start disk spinning right.
+
 Example: 
     
-    bonus 100 input -pu fc
+    bonus 100 input -pru fc
 
 
 I've also included a small random number generator so I can get a long list of random numbers for the HDD scheduler. This is purely supplemental.

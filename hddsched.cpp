@@ -14,17 +14,17 @@ void PrintUsage();
 void PrintVector(const std::vector<int> &addr, const int &size);
 void RunSchedule(const std::vector<int> &addr, const int &size);
 void FCFS(const std::vector<int> &addr, const int &size, const int &start, const bool &print);
-void SCAN(const std::vector<int> &addr, const int &size, const int &start, const bool &print);
-void CSCAN(const std::vector<int> &addr, const int &size, const int &start, const bool &print);
+void SCAN(const std::vector<int> &addr, const int &size, const int &start, const bool &print, const char &dir);
+void CSCAN(const std::vector<int> &addr, const int &size, const int &start, const bool &print, const char &dir);
 
 int main(int argc, char* argv[]){
 
     std::vector<int> addresses;
     std::ifstream inFile;
     std::string fileName, temp;
-    int addrSize=0, startPos=0, flagLen=0;
+    int startPos=0, flagLen=0;
     bool usage=false, printAddr=false, printF=false, printC=false, printS=false;
-    char flag;
+    char flag, direction='r';
 
     try{
         if(argc >= 3){
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
             fileName = argv[2];
 
             //These blocks handle the flags.
-            //This system can probably be revised to be much better.
+            //I've never done flags like this before, so this system can probably be revised to be much better.
             if(argc >= 4 && argv[3][0] == '-'){
                 flagLen = strlen(argv[3]);
                 for(int i = 1; i < flagLen; i++){
@@ -44,6 +44,10 @@ int main(int argc, char* argv[]){
                         case 'u': usage = true;
                             break;
                         case 'p': printAddr = true;
+                            break;
+                        case 'l': direction = 'l';
+                            break;
+                        case 'r': direction = 'r';
                             break;
                         default: throw 1;
                     }
@@ -81,21 +85,19 @@ int main(int argc, char* argv[]){
                         throw 5;
                     }
                 }
-                addrSize = addresses.size();
                 inFile.close();
             }
             else{
                 throw 2;
             }
             
-            FCFS(addresses, addrSize, startPos, printF);
-            SCAN(addresses, addrSize, startPos, printS);
-            CSCAN(addresses, addrSize, startPos, printC);
+            FCFS(addresses, addresses.size(), startPos, printF);
+            SCAN(addresses, addresses.size(), startPos, printS, direction);
+            CSCAN(addresses, addresses.size(), startPos, printC, direction);
 
             if(usage){
                 PrintUsage();
             }
-
         }
         else if (argc == 2 && strcmp(argv[1], "-u") == 0){
             PrintUsage();
@@ -140,11 +142,14 @@ void PrintUsage(){
     std::cout << "-File contents must be separated by end-lines with no whitespace after the final entry." << std::endl << std::endl;
     std::cout << "FLAGS:" << std::endl;
     std::cout << '\t' << "-u: Print usage. This may either be included in flags or used alone." << std::endl;
-    std::cout << '\t' << "-p <algorithm(s)>: Prints the address order of the specified algorithm. Recommended to pipe to a file if there are many requests." << std::endl;
+    std::cout << '\t' << "-p <algorithm(s)>: Prints the request order of the specified algorithm. Recommended to pipe to a file if there are many requests." << std::endl;
     std::cout << "\t\t" << "f: FCFS" << std::endl;
     std::cout << "\t\t" << "s: SCAN" << std::endl;
-    std::cout << "\t\t" << "c: CSCAN" << std::endl << std::endl;
-    std::cout << "Example: " << BIN_NAME << " 100 input -pu fc" << std::endl << std::endl;
+    std::cout << "\t\t" << "c: CSCAN" << std::endl;
+    std::cout << '\t' << "-l: Start disk spinning left." << std::endl;
+    std::cout << '\t' << "-r: Start disk spinning right." << std::endl;
+    std::cout << std::endl;
+    std::cout << "Example: " << BIN_NAME << " 100 input -pru fc" << std::endl << std::endl;
     std::cout << "Use " << BIN_NAME << " -u to only print this usage message." << std::endl;
 }
 
@@ -155,12 +160,11 @@ void PrintVector(const std::vector<int> &addr, const int &size){
 }
 
 void RunSchedule(const std::vector<int> &addr, const int &size, const int &start){
-    int movesCount=0, movesDist=0, prevAddr=start;
+    int movesDist=0, prevAddr=start;
 
     for(int i=0; i<size; i++){
         if(addr[i] != prevAddr){
             movesDist += abs(addr[i]-prevAddr);
-            movesCount++;
             prevAddr = addr[i];
         }
     }
@@ -176,7 +180,7 @@ void FCFS(const std::vector<int> &addr, const int &size, const int &start, const
     }
 }
 
-void SCAN(const std::vector<int> &addr, const int &size, const int &start, const bool &print){
+void SCAN(const std::vector<int> &addr, const int &size, const int &start, const bool &print, const char &dir){
     std::vector<int> left, right, scanAddr;
     int leftSize, rightSize;
 
@@ -191,20 +195,21 @@ void SCAN(const std::vector<int> &addr, const int &size, const int &start, const
     leftSize = left.size();
     rightSize = right.size();
 
-    if(abs(start-left[left.size()-1]) < abs(start-right[0])){
-        for(int i = leftSize-1; i >= 0; i--){
-            scanAddr.push_back(left[i]);
-        }
+    if(dir == 'r'){
         for(int i = 0; i < rightSize; i++){
             scanAddr.push_back(right[i]);
+        }
+        for(int i = leftSize-1; i >= 0; i--){
+            scanAddr.push_back(left[i]);
         }
     }
     else{
-        for(int i = 0; i < rightSize; i++){
-            scanAddr.push_back(right[i]);
-        }
+        
         for(int i = leftSize-1; i >= 0; i--){
             scanAddr.push_back(left[i]);
+        }
+        for(int i = 0; i < rightSize; i++){
+            scanAddr.push_back(right[i]);
         }
     }
 
@@ -216,7 +221,7 @@ void SCAN(const std::vector<int> &addr, const int &size, const int &start, const
     }
 }
 
-void CSCAN(const std::vector<int> &addr, const int &size, const int &start, const bool &print){
+void CSCAN(const std::vector<int> &addr, const int &size, const int &start, const bool &print, const char &dir){
     std::vector<int> left, right, scanAddr;
     int leftSize, rightSize;
 
@@ -231,11 +236,21 @@ void CSCAN(const std::vector<int> &addr, const int &size, const int &start, cons
     leftSize = left.size();
     rightSize = right.size();
 
-    for(int i = 0; i < rightSize; i++){
-        scanAddr.push_back(right[i]);
+    if(dir == 'r'){
+        for(int i = 0; i < rightSize; i++){
+            scanAddr.push_back(right[i]);
+        }
+        for(int i = 0; i < leftSize; i++){
+            scanAddr.push_back(left[i]);
+        }
     }
-    for(int i = 0; i < leftSize; i++){
-        scanAddr.push_back(left[i]);
+    else{
+        for(int i = leftSize-1; i >= 0; i--){
+            scanAddr.push_back(left[i]);
+        }
+        for(int i = rightSize-1; i >= 0; i--){
+            scanAddr.push_back(right[i]);
+        }
     }
 
     std::cout << "CSCAN: ";
